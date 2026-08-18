@@ -12,7 +12,7 @@ export const CONFIG = {
   text: {
     title: '雪 and 潇',                          // Scene 5（署名）
     subtitle: '我们的第一个七夕',                  // Scene 6
-    finale: '愿今夜的星光，替我落在你身边。',        // Scene 7
+    finale: '愿每一次抬头，都有星光，更有你',        // Scene 7
     entry: '点击开启我们的第一个七夕',              // 启动入口
     entryHint: 'Click to begin · 建议全屏观看',
     replay: 'Replay',
