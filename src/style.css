@@ -86,9 +86,9 @@ body {
   transform: translateX(0) translateY(0) scale(1);
 }
 
-/* 拉丁词稍微收一点亮度（必须放在 .is-in 之后，否则会覆盖隐藏状态） */
+/* 拉丁词更淡一档（必须放在 .is-in 之后，否则会覆盖隐藏状态） */
 .line.is-in .amp {
-  opacity: 0.72;
+  opacity: 0.58;
 }
 
 .line.is-out .ch {
@@ -99,15 +99,21 @@ body {
   transition-delay: calc(var(--i) * 42ms);
 }
 
-/* 拉丁词（and）用衬线体，克制、优雅 */
+/**
+ * 拉丁词（and）用衬线斜体：更小、更淡、留出更宽的呼吸，
+ * 让两个名字成为视觉主体 —— 读起来像署名，而不是一句字幕。
+ * 分隔感只靠字重与间距，不加任何线条或装饰。
+ */
 .line .amp {
   font-family: var(--font-en);
   font-style: italic;
   font-weight: 400;
-  letter-spacing: 0.06em;
-  font-size: 0.62em;
-  vertical-align: 0.12em;
-  margin: 0 0.1em;
+  letter-spacing: 0.02em;
+  font-size: 0.5em;
+  vertical-align: 0.16em;
+  margin: 0 0.42em;
+  color: rgba(206, 226, 255, 0.66);
+  text-shadow: 0 0 16px rgba(150, 200, 255, 0.22);
 }
 
 #line1 {
@@ -115,6 +121,12 @@ body {
   letter-spacing: 0.34em;
   text-indent: 0.34em; /* 抵消尾部字距，保持视觉居中 */
   bottom: 17%;
+}
+
+/* 两个名字比 and 更重一点：靠亮度和光晕拉开层次（中文字体没有 350 字重） */
+#line1 .ch:not(.amp) {
+  color: #f4f9ff;
+  text-shadow: 0 0 22px rgba(150, 200, 255, 0.5), 0 0 56px rgba(96, 140, 255, 0.3);
 }
 
 #line2 {
@@ -125,10 +137,11 @@ body {
   color: #dcebff;
 }
 
+/* 最后一句较长（14 字），字号收一档，保持轻盈与留白 */
 #line3 {
-  font-size: clamp(20px, 2.85vw, 55px);
-  letter-spacing: 0.3em;
-  text-indent: 0.3em;
+  font-size: clamp(17px, 2.35vw, 45px);
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
   bottom: 17.2%;
 }
 

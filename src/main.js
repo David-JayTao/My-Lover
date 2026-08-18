@@ -20,7 +20,6 @@ import { HeartParticles } from './scene/heart.js';
 import { HeartGlow } from './scene/glow.js';
 import { Butterflies } from './scene/butterflies.js';
 import { Overlay } from './ui/overlay.js';
-import { Ambient } from './audio/ambient.js';
 
 /* ------------------------------------------------------------------ *
  * URL 参数（仅用于开发 / 录制辅助）
@@ -89,7 +88,6 @@ const camera = new PerspectiveCamera(CONFIG.camera.fov, 16 / 9, 0.1, 200);
 camera.position.fromArray(CONFIG.camera.keys[0][1]);
 
 const overlay = new Overlay(CONFIG);
-const audio = new Ambient(CONFIG);
 overlay.setLoading();
 
 let postfx = null;
@@ -173,35 +171,34 @@ function buildTimeline() {
   t.span(T.butterflies.in, E.linear, (k) => (state.butterflies = k));
 
   /* --- Scene 5 / 6 / 7 文字 --- */
-  t.cue(
-    T.text1.in,
-    () => {
-      overlay.showLine(0);
-      audio.sparkle(4, 1.6, 0.9);
-    },
-    () => overlay.resetLine(0)
-  );
+  t.cue(T.text1.in, () => overlay.showLine(0), () => overlay.resetLine(0));
   t.cue(T.text1.out, () => overlay.hideLine(0), () => overlay.showLine(0));
-  t.cue(
-    T.text2.in,
-    () => {
-      overlay.showLine(1);
-      audio.sparkle(3, 1.4, 0.8);
-    },
-    () => overlay.resetLine(1)
-  );
+  t.cue(T.text2.in, () => overlay.showLine(1), () => overlay.resetLine(1));
   t.cue(T.text2.out, () => overlay.hideLine(1), () => overlay.showLine(1));
-  t.cue(
-    T.text3.in,
-    () => {
-      overlay.showLine(2);
-      audio.chord(3);
-      audio.sparkle(5, 1.8, 1.0);
-    },
-    () => overlay.resetLine(2)
-  );
+  t.cue(T.text3.in, () => overlay.showLine(2), () => overlay.resetLine(2));
 
-  /* --- 光脉冲 --- */
+  /**
+   * 字幕与爱心的轻微互动（复用已有的亮度通道，不新增系统）：
+   *   · 第一句出现时，爱心整体亮度轻微回落约 7%，把注意力让给文字
+   *   · 第二句出现前后恢复到正常亮度
+   *   · 最后一句出现时抬升约 8%，配合原有的光脉冲，像一次呼吸
+   * 这两条轨道必须注册在 heartFade / innerGlow 之后 —— 它们是乘性修饰。
+   */
+  const dipFrom = T.text1.in - 0.6;
+  const dipTo = T.text2.in + 1.2;
+  t.raw(dipFrom, dipTo - dipFrom, (k) => {
+    if (k <= 0 || k >= 1) return;
+    const dip = 1 - 0.07 * Math.sin(Math.PI * k);
+    state.heartFade *= dip;
+    state.innerGlow *= dip;
+  });
+  t.span([T.text3.in - 0.3, T.text3.in + 2.2], E.easeInOutSine, (k) => {
+    const lift = 1 + 0.08 * k;
+    state.heartFade *= lift;
+    state.innerGlow *= lift;
+  });
+
+  /* --- 光脉冲（终章唯一的一次，克制的呼吸而不是爆闪） --- */
   const pulseDur = T.pulse.attack + T.pulse.decay;
   t.raw(T.pulse.at, pulseDur, (k) => {
     const e = impulse(k, T.pulse.attack / pulseDur);
@@ -209,23 +206,9 @@ function buildTimeline() {
     state.bloomStrength = baseBloom * (1 + e * 0.85);
     state.escape = Math.max(state.escape, e * 0.9);
   });
-  t.cue(T.pulse.at, () => audio.swell());
 
   /* --- 终章扩散 --- */
   t.span(T.disperse.in, E.easeOutQuad, (k) => (state.disperse = k));
-
-  /* --- 音乐推进 --- */
-  t.cue(0.15, () => audio.brightness(520, 2.0));
-  t.cue(T.form.in[0], () => {
-    audio.chord(1);
-    audio.brightness(950, 5.0);
-  });
-  t.cue(8.4, () => audio.sparkle(3, 2.2, 0.7));
-  t.cue(T.form.in[1], () => {
-    audio.chord(2);
-    audio.brightness(1600, 3.5);
-    audio.sparkle(7, 2.6, 0.95);
-  });
 
   return t;
 }
@@ -333,7 +316,6 @@ function start(seek = 0) {
       }
     }
   }
-  audio.start();
   tl.reset();
   overlay.resetLines();
   butterflies.resetTrails();
@@ -348,7 +330,6 @@ function replay() {
   tl.reset();
   overlay.resetLines();
   butterflies.resetTrails();
-  audio.restart();
   tlTime = 0;
   playing = true;
   paused = false;
