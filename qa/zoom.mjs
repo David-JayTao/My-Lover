@@ -1,0 +1,32 @@
+import { chromium } from 'playwright';
+const [t, cx, cy, size] = process.argv.slice(2).map(Number);
+const b = await chromium.launch({ headless: false, args: ['--window-size=1536,952','--window-position=0,0'] });
+const p = await b.newPage({ viewport: { width: 1536, height: 864 } });
+await p.goto('http://localhost:5173/?nofs=1&capture=1&dpr=1.25');
+await p.waitForFunction('window.__qixi && window.__qixi.CONFIG');
+await p.waitForTimeout(2500);
+await p.evaluate(() => document.getElementById('entry').click());
+if (process.env.NOBLOOM) await p.evaluate(() => window.__qixi.bloom(false));
+if (process.env.LAYER) await p.evaluate((n) => window.__qixi.layer(n, false), process.env.LAYER);
+await p.evaluate((tt) => window.__qixi.freeze(tt), t);
+await p.waitForTimeout(800);
+const url = await p.evaluate(() => window.__qixi.capture());
+await p.evaluate(({u, cx, cy, size}) => {
+  document.body.innerHTML = '';
+  document.body.style.background = '#000';
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = 800; c.height = 800;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.drawImage(img, cx - size/2, cy - size/2, size, size, 0, 0, 800, 800);
+    document.body.appendChild(c);
+    window.__done = true;
+  };
+  img.src = u;
+}, { u: url, cx, cy, size });
+await p.waitForFunction('window.__done');
+await p.waitForTimeout(300);
+await p.screenshot({ path: 'qa/shots/zoom.png' });
+await b.close();

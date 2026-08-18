@@ -1,0 +1,19 @@
+{
+  "name": "qixi-snow",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Qixi for Snow — a cinematic WebGL love letter (particle heart, blue butterflies, starlight).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "three": "^0.169.0"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1",
+    "vite": "^5.4.10"
+  }
+}

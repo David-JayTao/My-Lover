@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>雪 and 潇 · 我们的第一个七夕</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2303040c'/%3E%3Cpath d='M16 26C7 19.5 4 15.6 4 12.2 4 9 6.5 6.6 9.7 6.6c1.9 0 3.7.9 4.9 2.4l1.4 1.7 1.4-1.7c1.2-1.5 3-2.4 4.9-2.4C25.5 6.6 28 9 28 12.2c0 3.4-3 7.3-12 13.8z' fill='%237ec8ff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <canvas id="stage"></canvas>
+
+    <!-- 电影式字幕层（内容由 src/config.js 注入） -->
+    <div class="cinema" id="cinema" aria-live="polite"></div>
+
+    <!-- 启动入口 -->
+    <div class="entry" id="entry">
+      <div class="entry__inner">
+        <div class="entry__ring"></div>
+        <div class="entry__title" id="entryTitle"></div>
+        <div class="entry__hint" id="entryHint"></div>
+      </div>
+    </div>
+
+    <button class="replay" id="replay" type="button" hidden></button>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

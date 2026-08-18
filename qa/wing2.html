@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>wing texture</title>
+<style>body{margin:0;background:#04060e;display:grid;place-items:center;height:100vh}
+#wrap{display:flex;gap:24px;align-items:center}
+canvas{image-rendering:auto}</style></head>
+<body><div id="wrap"></div>
+<script type="module">
+import { makeWingTexture } from '../src/scene/butterflies.js';
+const cv = makeWingTexture({ a:'#7fd4ff', mid:'#86bfff', b:'#8f8cff', edge:'rgba(232,246,255,0.95)' }, 512);
+const wrap = document.getElementById('wrap');
+// 单翼放大
+cv.style.width = '420px'; cv.style.height='420px';
+wrap.appendChild(cv);
+// 镜像拼成完整蝴蝶（近似预览）
+const full = document.createElement('canvas');
+full.width = 900; full.height = 500; full.style.width='560px';
+const g = full.getContext('2d');
+g.fillStyle='#04060e'; g.fillRect(0,0,900,500);
+g.save(); g.translate(450,60); g.scale(0.86,0.86); g.drawImage(cv,0,0,512,512); g.restore();
+g.save(); g.translate(450,60); g.scale(-0.86,0.86); g.drawImage(cv,0,0,512,512); g.restore();
+wrap.appendChild(full);
+</script></body></html>

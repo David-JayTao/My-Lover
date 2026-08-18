@@ -1,0 +1,268 @@
+/* =====================================================================
+   qixi-snow — 界面层（尽量安静，一切让位于画面）
+   ===================================================================== */
+
+:root {
+  --font-cn: "HarmonyOS Sans SC", "Source Han Sans SC", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", "微软雅黑", "Hiragino Sans GB", sans-serif;
+  --font-en: "Cormorant Garamond", "Georgia", "Times New Roman", serif;
+  --ink: #e8f1ff;
+  --ink-dim: rgba(206, 226, 255, 0.42);
+  --glow-a: rgba(150, 200, 255, 0.42);
+  --glow-b: rgba(96, 140, 255, 0.24);
+  --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #010206;
+  color: var(--ink);
+  font-family: var(--font-cn);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   字幕
+   --------------------------------------------------------------------- */
+.cinema {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.line {
+  position: absolute;
+  left: 50%;
+  bottom: 16.5%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+/**
+ * 字距收紧用 transform 实现，而不是过渡 letter-spacing：
+ * 后者每帧都会触发文本重排 + 重绘（还要连带重算 blur 和 text-shadow），
+ * 在 1080p 下会吃掉十几帧。这里每个字沿 X 对称展开再归零，
+ * 视觉效果一样，但全程只走合成层。
+ */
+.line .ch {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(12px);
+  transform: translateX(calc((var(--i) - (var(--n) - 1) / 2) * 0.30em))
+    translateY(0.40em) scale(1.05);
+  text-shadow: 0 0 20px var(--glow-a), 0 0 48px var(--glow-b);
+  transition: opacity 1.7s var(--ease-out), filter 2s var(--ease-out),
+    transform 2.2s var(--ease-out);
+  transition-delay: calc(var(--i) * 88ms);
+}
+
+.line .ch.sp {
+  width: 0.42em;
+}
+
+.line.is-in .ch {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateX(0) translateY(0) scale(1);
+}
+
+/* 拉丁词稍微收一点亮度（必须放在 .is-in 之后，否则会覆盖隐藏状态） */
+.line.is-in .amp {
+  opacity: 0.72;
+}
+
+.line.is-out .ch {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateX(0) translateY(-0.28em) scale(0.99);
+  transition-duration: 1.25s, 1.35s, 1.4s;
+  transition-delay: calc(var(--i) * 42ms);
+}
+
+/* 拉丁词（and）用衬线体，克制、优雅 */
+.line .amp {
+  font-family: var(--font-en);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  font-size: 0.62em;
+  vertical-align: 0.12em;
+  margin: 0 0.1em;
+}
+
+#line1 {
+  font-size: clamp(26px, 4.05vw, 78px);
+  letter-spacing: 0.34em;
+  text-indent: 0.34em; /* 抵消尾部字距，保持视觉居中 */
+  bottom: 17%;
+}
+
+#line2 {
+  font-size: clamp(15px, 2.06vw, 39px);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  bottom: 17.6%;
+  color: #dcebff;
+}
+
+#line3 {
+  font-size: clamp(20px, 2.85vw, 55px);
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  bottom: 17.2%;
+}
+
+/* 标题下方一条几乎看不见的光线 */
+.hairline {
+  position: absolute;
+  left: 50%;
+  bottom: 13.2%;
+  height: 1px;
+  width: 0;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(170, 210, 255, 0.5),
+    transparent
+  );
+  opacity: 0;
+  transition: width 3.4s var(--ease-out), opacity 2.2s ease;
+}
+.hairline.is-in {
+  width: min(26vw, 420px);
+  opacity: 0.55;
+}
+.hairline.is-out {
+  opacity: 0;
+  transition-duration: 1.1s;
+}
+
+/* ---------------------------------------------------------------------
+   启动入口
+   --------------------------------------------------------------------- */
+.entry {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  /* 用平铺的半透明暗幕而不是径向渐变：渐变在接近纯黑时会出现同心色带 */
+  background: rgba(2, 3, 9, 0.52);
+  transition: opacity 1.6s ease, backdrop-filter 1.6s ease;
+  opacity: 1;
+}
+
+.entry.is-loading {
+  cursor: progress;
+}
+
+.entry.is-gone {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.entry__inner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.35rem;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 2.2s var(--ease-out), transform 2.4s var(--ease-out);
+}
+.entry.is-ready .entry__inner {
+  opacity: 1;
+  transform: none;
+}
+
+.entry__ring {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #cfe6ff;
+  box-shadow: 0 0 14px rgba(160, 205, 255, 0.9), 0 0 46px rgba(90, 140, 255, 0.5);
+  animation: breathe 4.2s ease-in-out infinite;
+  margin-bottom: 0.4rem;
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+}
+
+.entry__title {
+  font-size: clamp(15px, 1.5vw, 27px);
+  font-weight: 300;
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  color: #e6f0ff;
+  text-shadow: 0 0 22px rgba(150, 200, 255, 0.35);
+}
+
+.entry__hint {
+  font-size: clamp(10px, 0.76vw, 13px);
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--ink-dim);
+}
+
+/* ---------------------------------------------------------------------
+   Replay（极低调）
+   --------------------------------------------------------------------- */
+.replay {
+  position: fixed;
+  right: 22px;
+  bottom: 18px;
+  z-index: 20;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-en);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  opacity: 0.14;
+  cursor: pointer;
+  padding: 8px 10px;
+  transition: opacity 0.6s ease;
+}
+.replay:hover,
+.replay:focus-visible {
+  opacity: 0.55;
+  outline: none;
+}
+.replay.is-hidden {
+  display: none;
+}
