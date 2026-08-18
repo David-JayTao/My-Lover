@@ -354,7 +354,16 @@ void main(){
   /* ---- 轨道位置与朝向（+Z 朝飞行方向，背部略朝镜头） ---- */
   vec3 p0 = orbitAt(aOrbitA, aOrbitB, aOrbitC, uTime, uDisperse, uCenter);
   vec3 p1 = orbitAt(aOrbitA, aOrbitB, aOrbitC, uTime + 0.05, uDisperse, uCenter);
-  vec3 zAxis = normalize(p1 - p0 + vec3(0.0, 0.0, 1e-5));
+  /**
+   * 机头方向要压掉垂直分量：轨道里的上下起伏速度和水平速度同量级，
+   * 直接拿完整速度当朝向会让蝴蝶俯冲/爬升到近乎垂直，
+   * 翅膀被压成一条侧看的薄片（像海鸟），飞行方向也变得难以辨认。
+   * 真实蝴蝶是机身基本保持水平、靠拍翅上下起伏。
+   * 注意：仍然满足 forward · velocity > 0，不会倒飞。
+   */
+  vec3 vel = p1 - p0;
+  vel.y *= 0.22;
+  vec3 zAxis = normalize(vel + vec3(0.0, 0.0, 1e-5));
   vec3 toCam = normalize(uCamPos - p0);
   vec3 up = normalize(vec3(0.0, 0.34, 0.0) + toCam * 0.90);
   if (abs(dot(up, zAxis)) > 0.97) up = vec3(0.0, 1.0, 0.0);
